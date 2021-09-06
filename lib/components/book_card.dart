@@ -59,7 +59,7 @@ class BookCard extends StatelessWidget {
               isImage: true,
             ),
             errorWidget: (context, url, error) => Image.asset(
-              '',
+              'assets/images/logo.jpg',
               fit: BoxFit.cover,
             ),
             fit: BoxFit.cover,

@@ -34,25 +34,16 @@ class _SignInUp extends State<CommonSignIn> with AutomaticKeepAliveClientMixin {
   final TextEditingController _passwordTextController =
       new TextEditingController();
 
-  final TextEditingController _oldPasswordTextController =
-      new TextEditingController();
-  final TextEditingController _newPasswordTextController =
-      new TextEditingController();
-  final TextEditingController _confirmPasswordTextController =
-      new TextEditingController();
   GlobalKey<FormState> _formKey1 = new GlobalKey<FormState>();
   GlobalKey<FormState> _formKey2;
-  bool _form1Autovalidate = false;
-  bool _form2Autovalidate = false;
-
-  final TextEditingController _SignUpPasswordTextController =
+  TextEditingController _SignUpPasswordTextController =
       new TextEditingController();
-  final TextEditingController _signUpUsernameTextController =
+  TextEditingController _signUpUsernameTextController =
       new TextEditingController();
 
-  final TextEditingController _signUpEmailTextController =
+  TextEditingController _signUpEmailTextController =
       new TextEditingController();
-  final TextEditingController _ConfirmPasswordTextController =
+  TextEditingController _ConfirmPasswordTextController =
       new TextEditingController();
   var kMarginPadding = 16.0;
   var kFontSize = 13.0;
@@ -81,7 +72,7 @@ class _SignInUp extends State<CommonSignIn> with AutomaticKeepAliveClientMixin {
               mainAxisSize: MainAxisSize.max,
               children: <Widget>[
                 new Container(
-                  margin: EdgeInsets.only(top: 75.0, left: 15.0, right: 15.0),
+                  margin: EdgeInsets.only(top: 55.0, left: 15.0, right: 15.0),
                   child: new Text(
                     "تسجيل الدخول",
                     maxLines: 1,
@@ -167,6 +158,7 @@ class _SignInUp extends State<CommonSignIn> with AutomaticKeepAliveClientMixin {
               ],
             ));
   }
+
   TextEditingController _textFieldController = TextEditingController();
 
   _displayDialog(BuildContext context) async {
@@ -201,6 +193,7 @@ class _SignInUp extends State<CommonSignIn> with AutomaticKeepAliveClientMixin {
           );
         });
   }
+
   final RoundedLoadingButtonController _btnController =
       new RoundedLoadingButtonController();
   final RoundedLoadingButtonController _signUpBtnController =
@@ -209,17 +202,21 @@ class _SignInUp extends State<CommonSignIn> with AutomaticKeepAliveClientMixin {
     debugPrint("_loginButtonTapped");
     FocusScope.of(context).requestFocus(new FocusNode());
     if (_formKey1.currentState.validate()) {
-      if (_emailTextController.text.length > 0&&
+      if (_emailTextController.text.length > 0 &&
           _passwordTextController.text.length > 0) {
         Api()
             .authtUser(_emailTextController.text.toString(),
                 _passwordTextController.text.toString())
             .then((value) {
           appLocalData.setName(value.userNicename);
-          appLocalData.setVIP(value.isVipMember);
           appLocalData.setEmail(value.userEmail);
           appLocalData.setToken(value.token);
           appLocalData.setIsUserLoggedIn(true);
+          Api().getUserProfile(value.token).then((userProfile) {
+            appLocalData.setVIP(userProfile.user.isVipMember);
+          }).catchError((onError) {
+            appLocalData.setVIP(false);
+          });
           debugPrint("getIsUserLoggedIn " +
               appLocalData.getIsUserLoggedIn().toString());
           setState(() {
@@ -230,13 +227,21 @@ class _SignInUp extends State<CommonSignIn> with AutomaticKeepAliveClientMixin {
             Navigator.pop(context);
           });
         }).catchError((onError) {
-          Helper.showToast(onError);
+          String message = "";
+          if (onError
+              .toString()
+              .contains("The username or password you entered is incorrect")) {
+            message =
+                "اسم المستخدم او كلمة المرور التي ادخلتها خاطئه. فقدت كلمة المرور الخاصة بك؟";
+          } else {
+            message = "حدث خطأ";
+          }
+          Helper.showToast(message);
           debugPrint(onError.toString());
           _btnController.reset();
         });
       } else {
         Helper.showToast('معلومات غير صحيحة');
-
         _btnController.reset();
       }
     } else {
@@ -253,265 +258,147 @@ class _SignInUp extends State<CommonSignIn> with AutomaticKeepAliveClientMixin {
   }
 
   Widget buildEmailSignUpForm() {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.start,
-      crossAxisAlignment: CrossAxisAlignment.center,
-      mainAxisSize: MainAxisSize.max,
-      children: <Widget>[
-        new Container(
-          margin: EdgeInsets.only(top: 75.0, left: 15.0, right: 15.0),
-          child: new Text(
-            'انشاء حساب جديد',
-            maxLines: 1,
-            style: TextStyle(fontSize: isTablet ? 27 : 18),
-          ),
-        ),
-        new Directionality(
-            textDirection: TextDirection.rtl,
-            child: Container(
-              padding: EdgeInsets.only(left: 10.0, right: 10.0),
-              margin:
-                  EdgeInsets.only(left: kMarginPadding, right: kMarginPadding),
-              child: new TextFormField(
-                  controller: _signUpUsernameTextController,
-                  validator: _validateFields,
-                  autovalidate: _form2Autovalidate,
-                  keyboardType: TextInputType.emailAddress,
-                  decoration: InputDecoration(
-                      labelText: "اسم المستخدم*",
-                      hintText: "أدخل اسم المستخدم الخاص بك",
-                      labelStyle: new TextStyle(fontSize: isTablet ? 27 : 18))),
-            )),
-        SizedBox(
-          height: 10.0,
-        ),
-        new Directionality(
-            textDirection: TextDirection.rtl,
-            child: Container(
-              padding: EdgeInsets.only(left: 10.0, right: 10.0),
-              margin:
-                  EdgeInsets.only(left: kMarginPadding, right: kMarginPadding),
-              child: new TextFormField(
-                  controller: _signUpEmailTextController,
-                  validator: _validateFields,
-                  autovalidate: _form2Autovalidate,
-                  keyboardType: TextInputType.emailAddress,
-                  decoration: InputDecoration(
-                      labelText: "البريد الالكتروني*",
-                      hintText: "أدخل البريد الالكتروني الخاص بك",
-                      labelStyle: new TextStyle(fontSize: isTablet ? 27 : 18))),
-            )),
-        SizedBox(
-          height: 10.0,
-        ),
-        new Directionality(
-            textDirection: TextDirection.rtl,
-            child: Container(
-              padding: EdgeInsets.only(left: 10.0, right: 10.0),
-              margin:
-                  EdgeInsets.only(left: kMarginPadding, right: kMarginPadding),
-              child: new TextFormField(
-                  style: new TextStyle(
-                      fontSize: isTablet ? 27 : 18, color: Colors.black38),
-                  obscureText: true,
-                  validator: (String value) {
-                    if (value.isEmpty) {
-                      return "من فضلك أدخل كلمة السر";
-                    } else {
-                      return null;
-                    }
-                  },
-                  controller: _SignUpPasswordTextController,
-                  decoration: InputDecoration(
-                      labelText: "كلمة السر*",
-                      hintText: "أدخل كلمة السر",
-                      labelStyle: new TextStyle(fontSize: isTablet ? 27 : 18))),
-            )),
-        SizedBox(
-          height: 10.0,
-        ),
-        new Directionality(
-            textDirection: TextDirection.rtl,
-            child: Container(
-              padding: EdgeInsets.only(left: 10.0, right: 10.0),
-              margin:
-                  EdgeInsets.only(left: kMarginPadding, right: kMarginPadding),
-              child: new TextFormField(
-                  style: new TextStyle(
-                      fontSize: isTablet ? 27 : 18, color: Colors.black38),
-                  obscureText: true,
-                  validator: (String value) {
-                    if (value.isEmpty) {
-                      return "من فضلك أدخل كلمة السر";
-                    } else {
-                      return null;
-                    }
-                  },
-                  autovalidate: _form2Autovalidate,
-                  controller: _ConfirmPasswordTextController,
-                  decoration: InputDecoration(
-                      labelText: "تأكيد كلمة السر*",
-                      hintText: "أدخل كلمة السر مرة أخرى",
-                      labelStyle: new TextStyle(fontSize: isTablet ? 27 : 18))),
-            )),
-        SizedBox(
-          height: 10.0,
-        ),
-        new RoundedLoadingButton(
-          color: Theme.of(context).accentColor,
-          controller: _signUpBtnController,
-          onPressed: () => _signUpButtonTaped(),
-          child: new Text(
-            "انشئ حساب",
-            style: TextStyle(
-                fontSize: isTablet ? 27 : 18,
-                color: Theme.of(context).scaffoldBackgroundColor),
-          ),
-        ),
-        new FlatButton(
-            onPressed: () {
-              setState(() {
-                switchToCreateAccount = false;
-              });
-            },
+    return SingleChildScrollView(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        mainAxisSize: MainAxisSize.max,
+        children: <Widget>[
+          new Container(
+            margin: EdgeInsets.only(top: 75.0, left: 15.0, right: 15.0),
             child: new Text(
-              'تسجيل الدخول',
+              'انشاء حساب جديد',
+              maxLines: 1,
               style: TextStyle(fontSize: isTablet ? 27 : 18),
-            )),
-      ],
+            ),
+          ),
+          new Directionality(
+              textDirection: TextDirection.rtl,
+              child: Container(
+                padding: EdgeInsets.only(left: 10.0, right: 10.0),
+                margin: EdgeInsets.only(
+                    left: kMarginPadding, right: kMarginPadding),
+                child: new TextFormField(
+                    controller: _signUpUsernameTextController,
+                    validator: _validateFields,
+                    keyboardType: TextInputType.emailAddress,
+                    decoration: InputDecoration(
+                        labelText: "اسم المستخدم*",
+                        hintText: "أدخل اسم المستخدم الخاص بك",
+                        labelStyle:
+                            new TextStyle(fontSize: isTablet ? 27 : 18))),
+              )),
+          SizedBox(
+            height: 10.0,
+          ),
+          new Directionality(
+              textDirection: TextDirection.rtl,
+              child: Container(
+                padding: EdgeInsets.only(left: 10.0, right: 10.0),
+                margin: EdgeInsets.only(
+                    left: kMarginPadding, right: kMarginPadding),
+                child: new TextFormField(
+                    controller: _signUpEmailTextController,
+                    validator: _validateFields,
+                    keyboardType: TextInputType.emailAddress,
+                    decoration: InputDecoration(
+                        labelText: "البريد الالكتروني*",
+                        hintText: "أدخل البريد الالكتروني الخاص بك",
+                        labelStyle:
+                            new TextStyle(fontSize: isTablet ? 27 : 18))),
+              )),
+          SizedBox(
+            height: 10.0,
+          ),
+          new Directionality(
+              textDirection: TextDirection.rtl,
+              child: Container(
+                padding: EdgeInsets.only(left: 10.0, right: 10.0),
+                margin: EdgeInsets.only(
+                    left: kMarginPadding, right: kMarginPadding),
+                child: new TextFormField(
+                    style: new TextStyle(
+                        fontSize: isTablet ? 27 : 18, color: Colors.black38),
+                    obscureText: true,
+                    validator: (String value) {
+                      if (value.isEmpty) {
+                        return "من فضلك أدخل كلمة السر";
+                      } else {
+                        return null;
+                      }
+                    },
+                    controller: _SignUpPasswordTextController,
+                    decoration: InputDecoration(
+                        labelText: "كلمة السر*",
+                        hintText: "أدخل كلمة السر",
+                        labelStyle:
+                            new TextStyle(fontSize: isTablet ? 27 : 18))),
+              )),
+          SizedBox(
+            height: 10.0,
+          ),
+          new Directionality(
+              textDirection: TextDirection.rtl,
+              child: Container(
+                padding: EdgeInsets.only(left: 10.0, right: 10.0),
+                margin: EdgeInsets.only(
+                    left: kMarginPadding, right: kMarginPadding),
+                child: new TextFormField(
+                    style: new TextStyle(
+                        fontSize: isTablet ? 27 : 18, color: Colors.black38),
+                    obscureText: true,
+                    validator: (String value) {
+                      if (value.isEmpty) {
+                        return "من فضلك أدخل كلمة السر";
+                      } else {
+                        return null;
+                      }
+                    },
+                    controller: _ConfirmPasswordTextController,
+                    decoration: InputDecoration(
+                        labelText: "تأكيد كلمة السر*",
+                        hintText: "أدخل كلمة السر مرة أخرى",
+                        labelStyle:
+                            new TextStyle(fontSize: isTablet ? 27 : 18))),
+              )),
+          SizedBox(
+            height: 10.0,
+          ),
+          new RoundedLoadingButton(
+            color: Theme.of(context).accentColor,
+            controller: _signUpBtnController,
+            onPressed: () => _signUpButtonTaped(),
+            child: new Text(
+              "انشئ حساب",
+              style: TextStyle(
+                  fontSize: isTablet ? 27 : 18,
+                  color: Theme.of(context).scaffoldBackgroundColor),
+            ),
+          ),
+          new FlatButton(
+              onPressed: () {
+                setState(() {
+                  switchToCreateAccount = false;
+                });
+              },
+              child: new Text(
+                'تسجيل الدخول',
+                style: TextStyle(fontSize: isTablet ? 27 : 18),
+              )),
+        ],
+      ),
     );
-
-    // return Column(
-    //   mainAxisAlignment: MainAxisAlignment.start,
-    //   crossAxisAlignment: CrossAxisAlignment.center,
-    //   mainAxisSize: MainAxisSize.max,
-    //   children: <Widget>[
-    //     new Container(
-    //       margin: EdgeInsets.only(top: 75.0, left: 15.0, right: 15.0),
-    //       child: new Text(
-    //         "تسجيل الدخول",
-    //         maxLines: 1,
-    //         style: TextStyle(fontSize: isTablet ? 27 : 18),
-    //       ),
-    //     ),
-    //     new Directionality(
-    //         textDirection: TextDirection.rtl,
-    //         child: Container(
-    //           padding: EdgeInsets.only(left: 10.0, right: 10.0),
-    //           margin:
-    //               EdgeInsets.only(left: kMarginPadding, right: kMarginPadding),
-    //           child: new TextFormField(
-    //               controller: _emailTextController,
-    //               validator: _validateFields,
-    //               autovalidate: _form2Autovalidate,
-    //               keyboardType: TextInputType.emailAddress,
-    //               decoration: InputDecoration(
-    //                 labelText: "اسم المستخدم*",
-    //                 hintText: "أدخل اسم المستخدم الخاص بك",
-    //                 labelStyle: TextStyle(fontSize: isTablet ? 27 : 18),
-    //               )),
-    //         )),
-    //     new Directionality(
-    //         textDirection: TextDirection.rtl,
-    //         child: Container(
-    //           padding: EdgeInsets.only(left: 10.0, right: 10.0),
-    //           margin:
-    //               EdgeInsets.only(left: kMarginPadding, right: kMarginPadding),
-    //           child: new TextFormField(
-    //               controller: _emailTextController,
-    //               validator: _validateFields,
-    //               autovalidate: _form2Autovalidate,
-    //               keyboardType: TextInputType.emailAddress,
-    //               decoration: InputDecoration(
-    //                   labelText: "البريد الالكتروني*",
-    //                   hintText: "أدخل البريد الالكتروني الخاص بك",
-    //                   labelStyle: new TextStyle(fontSize: isTablet ? 23 : 13))),
-    //         )),
-    //     SizedBox(
-    //       height: 10.0,
-    //     ),
-    //     new Directionality(
-    //         textDirection: TextDirection.rtl,
-    //         child: Container(
-    //           padding: EdgeInsets.only(left: 10.0, right: 10.0),
-    //           margin:
-    //               EdgeInsets.only(left: kMarginPadding, right: kMarginPadding),
-    //           child: new TextFormField(
-    //               style: new TextStyle(
-    //                   fontSize: isTablet ? 27 : 18, color: Colors.black38),
-    //               obscureText: true,
-    //               autovalidate: _form2Autovalidate,
-    //               validator: (String value) {
-    //                 if (value.isEmpty) {
-    //                   return "من فضلك أدخل كلمة السر";
-    //                 } else {
-    //                   return null;
-    //                 }
-    //               },
-    //               controller: _passwordTextController,
-    //               decoration: InputDecoration(
-    //                 labelText: "كلمة السر*",
-    //                 hintText: "أدخل كلمة السر",
-    //                 labelStyle: TextStyle(fontSize: isTablet ? 27 : 18),
-    //               )),
-    //         )),
-    //     new Directionality(
-    //         textDirection: TextDirection.rtl,
-    //         child: Container(
-    //           padding: EdgeInsets.only(left: 10.0, right: 10.0),
-    //           margin:
-    //               EdgeInsets.only(left: kMarginPadding, right: kMarginPadding),
-    //           child: new TextFormField(
-    //               style: new TextStyle(
-    //                   fontSize: isTablet ? 27 : 18, color: Colors.black38),
-    //               obscureText: true,
-    //               validator: (String value) {
-    //                 if (value.isEmpty) {
-    //                   return "من فضلك أدخل كلمة السر";
-    //                 } else {
-    //                   return null;
-    //                 }
-    //               },
-    //               controller: _passwordTextController,
-    //               decoration: InputDecoration(
-    //                   labelText: "تأكيد كلمة السر*",
-    //                   hintText: "أدخل كلمة السر مرة أخرى",
-    //                   labelStyle: new TextStyle(fontSize: isTablet ? 27 : 18))),
-    //         )),
-    //     SizedBox(
-    //       height: 10.0,
-    //     ),
-    //     new RoundedLoadingButton(
-    //       onPressed: _signUpButtonTaped(),
-    //       color: Theme.of(context).accentColor,
-    //       controller: _signUpBtnController,
-    //       child: new Text(
-    //         "انشئ حساب",
-    //         style: TextStyle(
-    //             color: Theme.of(context).scaffoldBackgroundColor,
-    //             fontSize: isTablet ? 27 : 18),
-    //       ),
-    //     ),
-    //     new FlatButton(
-    //         onPressed: () {
-    //           setState(() {
-    //             switchToCreateAccount = false;
-    //           });
-    //         },
-    //         child: new Text(
-    //           'تسجيل الدخول',
-    //           style: TextStyle(fontSize: isTablet ? 27 : 18),
-    //         )),
-    //   ],
-    // );
   }
 
   _signUpButtonTaped() {
     FocusScope.of(context).requestFocus(new FocusNode());
     if (_formKey2.currentState.validate()) {
+      debugPrint(_SignUpPasswordTextController.text.toString() +
+          "  " +
+          _ConfirmPasswordTextController.text.toString());
       if (EmailValidator.validate(_signUpEmailTextController.text.trim()) &&
           _SignUpPasswordTextController.text.toString() ==
-              _confirmPasswordTextController.text.toString()) {
+              _ConfirmPasswordTextController.text.toString()) {
         Api()
             .registerUser(
                 _signUpUsernameTextController.text,
@@ -523,12 +410,22 @@ class _SignInUp extends State<CommonSignIn> with AutomaticKeepAliveClientMixin {
           });
         }).catchError((onError) {
           debugPrint("showloginSheet " + onError.toString());
-          Helper.showToast(onError);
+          String message = "";
+          if (onError.toString().contains(
+              "Username already exists, please enter another username")) {
+            message = "اسم المستخدم موجود بالفعل ، يرجى إدخال اسم مستخدم آخر";
+          }
+          if (onError.toString().contains("Email already exists")) {
+            message = "البريد الإلكتروني موجود بالفعل ، يرجى محاولة بريد اّخر";
+          } else {
+            message = "حدث خطأ";
+          }
+          Helper.showToast(message);
           _signUpBtnController.error();
           _signUpBtnController.reset();
         });
       } else {
-        Helper.showToast('معلومات غير صحيحة');
+        Helper.showToast('معلومات غير صحيحة-تأكد من تطابق كلمة السر');
         _signUpBtnController.reset();
       }
     } else {

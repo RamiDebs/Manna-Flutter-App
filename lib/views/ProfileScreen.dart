@@ -7,8 +7,10 @@ import 'package:maana_main_project_2/util/shared_preferences_helper.dart';
 
 class ProfileScreen extends StatefulWidget {
   final PageController pageController;
+  final String userData;
 
-  const ProfileScreen({Key key, this.pageController}) : super(key: key);
+  const ProfileScreen({Key key, this.pageController, this.userData})
+      : super(key: key);
 
   _ProfileScreenState createState() => _ProfileScreenState();
 }
@@ -26,79 +28,83 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Theme.of(context).primaryColor,
-      body: SafeArea(
-          top: true,
-          child: Center(
+      body: ListView(
+        // This next line does the trick.
+        scrollDirection: Axis.vertical,
+        children: <Widget>[
+          new Container(
+            padding: EdgeInsets.only(top: 50),
+            color: Theme.of(context).primaryColor,
             child: Column(
               children: <Widget>[
-                new Container(
-                  color: Theme.of(context).primaryColor,
-                  height: 250.0,
-                  child: Stack(
-                    children: <Widget>[
-                      Align(
-                        alignment: Alignment.topRight,
-                        child: FlatButton(
-                            child: Text(
-                              "تسجيل الخروج",
-                              style: TextStyle(
-                                  color: Theme.of(context).accentColor,
-                                  fontSize: 18),
-                            ),
-                            onPressed: () => _signOutButtonTapped()),
-                      ),
-                      Padding(
-                          padding: EdgeInsets.all(22),
-                          child: Align(
-                            alignment: Alignment.center,
-                            child: Lottie.asset(
-                              'assets/user.json',
-                              repeat: false,
-                              reverse: true,
-                              animate: true,
-                            ),
-                          )),
-                    ],
+                Padding(
+                  padding:
+                      EdgeInsets.only(top: 22, left: 22, bottom: 22, right: 22),
+                  child: Lottie.asset(
+                    'assets/user.json',
+                    height: 200,
+                    width: 200,
+                    repeat: false,
+                    reverse: true,
+                    animate: true,
                   ),
                 ),
-                new Card(
-                  color: Theme.of(context).primaryColor,
-
-                  margin: EdgeInsets.all(10.0),
-                  elevation: 5.0,
-                  //color: Constants.lg_gray_light,
-                  child: _profileItems(),
-                ),
-                Container(
-                  color: Theme.of(context).primaryColor,
-                  child: Align(
-                    alignment: Alignment.centerRight,
-                    child: FlatButton(
-                        child: Text(
-                          "إعادة تعيين كلمة المرور",
-                          style: (TextStyle(
-                              color: Theme.of(context).accentColor,
-                              fontSize: 18)),
+                widget.userData != null
+                    ? Center(
+                        child: Container(
+                          color: Theme.of(context).primaryColor,
+                          child: Text(
+                            widget.userData,
+                            style: (TextStyle(
+                                color: Theme.of(context).accentColor,
+                                fontSize: 18)),
+                          ),
                         ),
-                        onPressed: () {
-                          _displayDialog(context);
-                        }),
+                      )
+                    : Container(),
+                Container(
+                  margin: EdgeInsets.all(10),
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    border: Border.all(
+                        color: Color(0xffF8EBAA), // set border color
+                        width: 3.0), // set border width
+                    borderRadius: BorderRadius.all(
+                        Radius.circular(10.0)), // set rounded corner radius
                   ),
+                  child: FlatButton(
+                      child: Text(
+                        "تسجيل الخروج",
+                        style: TextStyle(
+                            color: Theme.of(context).accentColor, fontSize: 18),
+                      ),
+                      onPressed: () => _signOutButtonTapped()),
                 ),
-                new Card(
-                  margin: EdgeInsets.all(10.0),
-                  elevation: 5.0,
-                  color: Theme.of(context).primaryColor,
-                )
               ],
             ),
-          )),
-    );
-  }
-
-  Widget _profileItems() {
-    return Column(
-      children: <Widget>[],
+          ),
+          Container(
+            margin: EdgeInsets.all(10),
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              border: Border.all(
+                  color: Color(0xffF8EBAA), // set border color
+                  width: 3.0), // set border width
+              borderRadius: BorderRadius.all(
+                  Radius.circular(10.0)), // set rounded corner radius
+            ),
+            child: FlatButton(
+                child: Text(
+                  "إعادة تعيين كلمة المرور",
+                  style: (TextStyle(
+                      color: Theme.of(context).accentColor, fontSize: 18)),
+                ),
+                onPressed: () {
+                  _displayDialog(context);
+                }),
+          ),
+        ],
+      ),
     );
   }
 

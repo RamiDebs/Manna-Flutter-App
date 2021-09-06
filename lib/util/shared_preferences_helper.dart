@@ -2,8 +2,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 class AppLocalData {
   Future<SharedPreferences> _prefs;
-  bool isUserLoggedIn;
-  bool isVIP;
+  bool isUserLoggedIn = false;
+  bool isVIP = false;
   String Token = "";
   String name = "";
   String email = "";

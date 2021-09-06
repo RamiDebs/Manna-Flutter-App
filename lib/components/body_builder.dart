@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:maana_main_project_2/components/error_widget.dart';
 import 'package:maana_main_project_2/components/loading_widget.dart';
 import 'package:maana_main_project_2/util/enum/api_request_status.dart';
@@ -35,13 +35,13 @@ class BodyBuilder extends StatelessWidget {
         );
         break;
       case APIRequestStatus.connectionError:
-        return MyErrorWidget(
+        return WidgetError(
           refreshCallBack: reload,
           isConnection: true,
         );
         break;
       case APIRequestStatus.error:
-        return MyErrorWidget(
+        return WidgetError(
           refreshCallBack: reload,
           isConnection: false,
         );
@@ -50,12 +50,12 @@ class BodyBuilder extends StatelessWidget {
         return child;
         break;
       case APIRequestStatus.noData:
-        return MyErrorWidget(
+        return WidgetError(
           refreshCallBack: reload,
           isConnection: false,
           isnoBooks: true,
         );
-        ;
+
         break;
       default:
         return LoadingWidget(

@@ -91,7 +91,7 @@ class BookListItemShimmer extends StatelessWidget {
                     ),
                   ),
                   errorWidget: (context, url, error) => Image.asset(
-                    '',
+                    'assets/images/logo.jpg',
                     fit: BoxFit.cover,
                     height: isTablet ? 300 : 150.0,
                     width: isTablet ? 200 : 100.0,

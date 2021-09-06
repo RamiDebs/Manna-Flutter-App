@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:maana_main_project_2/util/Helper.dart';
 
-class MyErrorWidget extends StatelessWidget {
+class WidgetError extends StatelessWidget {
   final Function refreshCallBack;
   final bool isConnection;
   final bool isnoBooks;
   bool isTablet;
 
-  MyErrorWidget({
+  WidgetError({
     @required this.refreshCallBack,
     this.isConnection = false,
     this.isnoBooks = false,
@@ -46,7 +46,7 @@ class MyErrorWidget extends StatelessWidget {
                 borderRadius: BorderRadius.circular(5.0),
               ),
               child: Text(
-                'حاول مرة أخري',
+                'حاول مرة اخرى',
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   color: Theme.of(context).primaryColor,
@@ -68,7 +68,7 @@ class MyErrorWidget extends StatelessWidget {
     if (isConnection) {
       return 'هناك مشكلة في اتصالك بالإنترنت \n الرجاء المحاولة مرة أخرى';
     } else {
-      return 'لا يمكن تحميل هذه الصفحة \n حاول مرة اخرى';
+      return 'لا يمكن تحميل هذه الصفحة \n حاول مرة أخرى';
     }
   }
 }

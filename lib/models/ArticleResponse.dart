@@ -30,8 +30,16 @@ class Articles {
   Articles({this.title, this.summary, this.imageUrl, this.url});
 
   Articles.fromJson(Map<String, dynamic> json) {
-    title = json['title'];
-    summary = json['summary'];
+    title = json['title']
+        .toString()
+        .replaceAll(r'&nbsp;', '')
+        .replaceAll(r'&hellip;', '')
+        .replaceAll('&#8211;', '-');
+    summary = json['summary']
+        .toString()
+        .replaceAll(r'&nbsp;', '')
+        .replaceAll(r'&hellip;', '')
+        .replaceAll('&#8211;', '-');
     imageUrl = json['image_url'];
     url = json['url'];
   }
@@ -73,7 +81,11 @@ class Article {
   Article({this.title, this.content, this.imageUrl});
 
   Article.fromJson(Map<String, dynamic> json) {
-    title = json['title'];
+    title = json['title']
+        .toString()
+        .replaceAll(r'&nbsp;', '')
+        .replaceAll(r'&hellip;', '')
+        .replaceAll('&#8211;', '-');
     content = json['content'];
     imageUrl = json['image_url'];
   }

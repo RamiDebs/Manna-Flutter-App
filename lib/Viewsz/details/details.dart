@@ -9,10 +9,12 @@ import 'package:maana_main_project_2/components/loading_widget.dart';
 import 'package:maana_main_project_2/genre/genre.dart';
 import 'package:maana_main_project_2/models/FeedResponse.dart';
 import 'package:maana_main_project_2/util/Helper.dart';
+import 'package:maana_main_project_2/util/api.dart';
 import 'package:maana_main_project_2/util/router.dart';
 import 'package:maana_main_project_2/util/shared_preferences_helper.dart';
 import 'package:maana_main_project_2/view_models/details_provider.dart';
 import 'package:provider/provider.dart';
+import 'package:share/share.dart';
 
 class Details extends StatefulWidget {
   final Books book;
@@ -35,6 +37,8 @@ class Details extends StatefulWidget {
 class _DetailsState extends State<Details> {
   AppLocalData appLocalData;
   bool istablet = false;
+  bool isLoading = false;
+
   @override
   void initState() {
     super.initState();
@@ -138,19 +142,38 @@ class _DetailsState extends State<Details> {
                     Padding(
                         padding: EdgeInsets.only(top: istablet ? 12 : 8),
                         child: GestureDetector(
-                          onTap: () {
-                            AppLocalData().getIsUserLoggedIn().then((value) {
-                              if (value) {
-                                MyRouter.pushPage(
-                                    context,
-                                    PDFPage(
-                                      path: widget.book.pdfUrl,
-                                    ));
-                              } else {
-                                Helper.showErrorBottomSheet(context, istablet);
-                              }
-                            });
-                          },
+                          onTap: isLoading
+                              ? null
+                              : () {
+                                  var appData = AppLocalData();
+                                  appData.getIsUserLoggedIn().then((value) {
+                                    if (value) {
+                                      setState(() {
+                                        isLoading = true;
+                                      });
+                                      Api()
+                                          .getUserProfile(appData.getToken())
+                                          .then((userProfile) {
+                                        if (userProfile.user.isVipMember) {
+                                          MyRouter.pushPage(
+                                              context,
+                                              PDFPage(
+                                                path: widget.book.pdfUrl,
+                                              ));
+                                        } else {
+                                          Helper.showSubscribeErrorBottomSheet(
+                                              context, istablet);
+                                        }
+                                        setState(() {
+                                          isLoading = false;
+                                        });
+                                      });
+                                    } else {
+                                      Helper.showErrorBottomSheet(
+                                          context, istablet);
+                                    }
+                                  });
+                                },
                           child: Container(
                             width: istablet ? 350 : 250,
                             decoration: new BoxDecoration(
@@ -158,7 +181,33 @@ class _DetailsState extends State<Details> {
                                 borderRadius: new BorderRadius.all(
                                     Radius.circular(40.0))),
                             child: Text(
-                              "تصفح الكتاب",
+                              isLoading ? 'انتظر من فضلك' : "تصفح الكتاب",
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                  fontSize: istablet ? 25 : 18,
+                                  color: Theme.of(context)
+                                      .scaffoldBackgroundColor),
+                            ),
+                          ),
+                        )),
+                    SizedBox(height: 5.0),
+                    Padding(
+                        padding: EdgeInsets.only(top: istablet ? 12 : 8),
+                        child: GestureDetector(
+                          onTap: isLoading
+                              ? null
+                              : () {
+                                  Share.share(
+                                      '${widget.book.title}\n\n${widget.book.website_url}');
+                                },
+                          child: Container(
+                            width: istablet ? 350 : 250,
+                            decoration: new BoxDecoration(
+                                color: Theme.of(context).accentColor,
+                                borderRadius: new BorderRadius.all(
+                                    Radius.circular(40.0))),
+                            child: Text(
+                              isLoading ? 'انتظر من فضلك' : "شارك الكتاب",
                               textAlign: TextAlign.center,
                               style: TextStyle(
                                   fontSize: istablet ? 25 : 18,

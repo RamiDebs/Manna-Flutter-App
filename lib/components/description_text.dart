@@ -34,12 +34,16 @@ class _DescriptionTextWidgetState extends State<DescriptionTextWidget> {
   Widget build(BuildContext context) {
     istablet = Helper.isTablet(context);
     return Container(
+      padding: EdgeInsets.only(left: 12),
       child: secondHalf.isEmpty
           ? Text(
               '${flag ? (firstHalf) : (firstHalf + secondHalf)}'
                   .replaceAll(r'\n', '\n')
                   .replaceAll(r'\r', '')
-                  .replaceAll(r"\'", "'"),
+                  .replaceAll(r'&nbsp;', '')
+                  .replaceAll(r'&hellip;', '')
+                  .replaceAll('&#8211;', '-')
+                  .replaceAll(r"\'", ""),
               textAlign: TextAlign.right,
               style: TextStyle(
                 fontSize: istablet ? 25 : 16.0,
@@ -52,6 +56,9 @@ class _DescriptionTextWidgetState extends State<DescriptionTextWidget> {
                   '${flag ? (firstHalf + '...') : (firstHalf + secondHalf)}'
                       .replaceAll(r'\n', '\n\n')
                       .replaceAll(r'\r', '')
+                      .replaceAll(r'&nbsp;', '')
+                      .replaceAll('&#8211;', '-')
+                      .replaceAll(r'&hellip;', '')
                       .replaceAll(r"\'", "'"),
                   textAlign: TextAlign.right,
                   style: TextStyle(

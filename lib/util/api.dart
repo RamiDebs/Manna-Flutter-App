@@ -7,24 +7,24 @@ import 'package:maana_main_project_2/models/ArticleResponse.dart';
 import 'package:maana_main_project_2/models/ExploreResponse.dart';
 import 'package:maana_main_project_2/models/FeedResponse.dart';
 import 'package:maana_main_project_2/models/SingleArticleResponse.dart';
+import 'package:maana_main_project_2/models/UserProfile.dart';
 import 'package:maana_main_project_2/models/UserResponse.dart';
 import 'package:maana_main_project_2/models/WordpressResponse.dart';
 
 class Api {
   Dio dio = Dio();
+  static String baseURL = "https://newmana.staging-dev.com/wp-json";
+  static String manaFlutter = "$baseURL/mana-flutter/v2";
 
-  static String articles =
-      "https//mana.domvp.xyz/wp-json/mana-flutter/v2/articles";
-  static String explore =
-      "https://mana.domvp.xyz/wp-json/mana-flutter/v2/explore";
-  static String feed = "https://mana.domvp.xyz/wp-json/mana-flutter/v2/feed";
-  static String auth = "https://mana.domvp.xyz/wp-json/jwt-auth/v1/token";
-  static String validate =
-      "https://mana.domvp.xyz/wp-json/jwt-auth/v1/token/validate";
-  static String registerUserURL =
-      "https://mana.domvp.xyz/wp-json/wp/v2/users/register";
-  static String resetPasswordUrl =
-      "https://mana.domvp.xyz/wp-json/wp/v2/users/lostpassword";
+  static String articles = "$manaFlutter/articles";
+  static String explore = "$manaFlutter/explore";
+  static String feed = "$manaFlutter/feed";
+  static String auth = "$baseURL/jwt-auth/v1/token";
+  static String validate = "$baseURL/jwt-auth/v1/token/validate";
+  static String registerUserURL = "$baseURL/wp/v2/users/register";
+  static String resetPasswordUrl = "$baseURL/wp/v2/users/lost-password";
+
+  static String profile = "$manaFlutter/profile";
 
   Future<User> authtUser(String username, String password) async {
     Map<String, dynamic> payload = {"username": username, "password": password};
@@ -77,6 +77,8 @@ class Api {
 
     ArticlesResponse articleResponse;
     if (res.statusCode == 200) {
+      dio.options.headers['content-Type'] = 'application/json';
+
       articleResponse = ArticlesResponse.fromJson(res.data);
       debugPrint("json " + res.data.toString());
     } else {
@@ -87,6 +89,8 @@ class Api {
   }
 
   Future<Article> getArticle(String url) async {
+    dio.options.headers['content-Type'] = 'application/json';
+
     var res = await dio.get(url);
 
     Article article;
@@ -104,6 +108,8 @@ class Api {
     String url,
   ) async {
     debugPrint("jsonn " + url);
+    dio.options.headers['content-Type'] = 'application/json';
+
     var res = await dio.get(url).catchError((e) {
       debugPrint("json error here");
       throw (e);
@@ -135,6 +141,8 @@ class Api {
   }
 
   Future<ExploreResponse> getCategory(String url) async {
+    dio.options.headers['content-Type'] = 'application/json';
+
     var res = await dio.get(url).catchError((e) {
       throw (e);
     });
@@ -146,6 +154,27 @@ class Api {
       throw ('Error ${res.statusCode}');
     }
     return exploreResponse;
+  }
+
+  Future<UserProfile> getUserProfile(String token) async {
+    dio.options.headers['content-Type'] = 'application/json';
+
+    final response = await dio.get(profile,
+        options: Options(headers: {
+          'Accept': 'application/json',
+          'Authorization': 'Bearer $token',
+        }));
+    print('Token : ${token}');
+    print(response);
+
+    UserProfile userProfile;
+    if (response.statusCode == 200) {
+      userProfile = UserProfile.fromJson(response.data);
+      debugPrint("json " + response.data.toString());
+    } else {
+      throw ('Error ${response.statusCode}');
+    }
+    return userProfile;
   }
 
   Future<WordpressResponse> registerUser(

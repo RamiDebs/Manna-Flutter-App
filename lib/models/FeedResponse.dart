@@ -81,6 +81,7 @@ class Books {
   String imageUrl;
   String pdfUrl;
   String url;
+  String website_url;
   List<Tags> tags;
 
   Books(
@@ -92,10 +93,19 @@ class Books {
       this.tags});
 
   Books.fromJson(Map<String, dynamic> json) {
-    title = json['title'];
-    summary = json['summary'];
+    title = json['title']
+        .toString()
+        .replaceAll(r'&nbsp;', '')
+        .replaceAll(r'&hellip;', '')
+        .replaceAll('&#8211;', '-');
+    summary = json['summary']
+        .toString()
+        .replaceAll(r'&nbsp;', '')
+        .replaceAll(r'&hellip;', '')
+        .replaceAll('&#8211;', '-');
     imageUrl = json['image_url'];
     pdfUrl = json['pdf_url'];
+    website_url = json['website_url'];
     url = json['url'];
     if (json['tags'] != null) {
       tags = new List<Tags>();

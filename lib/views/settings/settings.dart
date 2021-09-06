@@ -1,15 +1,20 @@
+import 'dart:io';
+
+import 'package:flutter/foundation.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_icons/flutter_icons.dart';
 import 'package:maana_main_project_2/components/common_signin.dart';
 import 'package:maana_main_project_2/theme/theme_config.dart';
 import 'package:maana_main_project_2/util/Helper.dart';
+import 'package:maana_main_project_2/util/api.dart';
 import 'package:maana_main_project_2/util/router.dart';
 import 'package:maana_main_project_2/util/shared_preferences_helper.dart';
 import 'package:maana_main_project_2/view_models/app_provider.dart';
-import 'package:maana_main_project_2/views/CreditCard.dart';
 import 'package:maana_main_project_2/views/ProfileScreen.dart';
 import 'package:provider/provider.dart';
 import 'package:shimmer/shimmer.dart';
+import 'package:webview_flutter/webview_flutter.dart';
 
 class Profile extends StatefulWidget {
   PageController pageController;
@@ -29,6 +34,7 @@ class _ProfileState extends State<Profile> with AutomaticKeepAliveClientMixin {
   var divWidth;
   bool istablet = false;
   bool isLoading = true;
+  String userData = null;
 
   var kMarginPadding = 16.0;
   var kFontSize = 13.0;
@@ -38,16 +44,9 @@ class _ProfileState extends State<Profile> with AutomaticKeepAliveClientMixin {
   void initState() {
     super.initState();
 
-    items = List();
-    mainItems = List();
-    myAccount = List();
-
-    AppLocalData().getIsUserLoggedIn().then((value) {
-      setState(() {
-        showLogin = value ?? false;
-        isLoading = false;
-      });
-    });
+    items = [];
+    mainItems = [];
+    myAccount = [];
 
     myAccount.add({
       'icon': Feather.user,
@@ -56,6 +55,7 @@ class _ProfileState extends State<Profile> with AutomaticKeepAliveClientMixin {
           context,
           ProfileScreen(
             pageController: widget.pageController,
+            userData: userData,
           ),
           false,
           null),
@@ -72,11 +72,6 @@ class _ProfileState extends State<Profile> with AutomaticKeepAliveClientMixin {
         'title': 'تسجيل الدخول',
         'function': () => showloginSheet(),
       },
-      {
-        'icon': Feather.credit_card,
-        'title': 'أشتراك معنى',
-        'function': () => showPayment(),
-      }
     ]);
 
     items.addAll([
@@ -96,12 +91,56 @@ class _ProfileState extends State<Profile> with AutomaticKeepAliveClientMixin {
         'function': () => showAbout(),
       },
     ]);
+    if (Platform.isAndroid) WebView.platform = SurfaceAndroidWebView();
+
+    var appLocalData = AppLocalData();
+    appLocalData.getIsUserLoggedIn().then((value) {
+      if (value != null) {
+        showLogin = value ?? false;
+        if (showLogin) {
+          Api().getUserProfile(appLocalData.getToken()).then((userProfile) {
+            debugPrint("userProfile.user.isVipMember " +
+                userProfile.user.isVipMember.toString());
+            appLocalData.setVIP(userProfile.user.isVipMember);
+            if (!userProfile.user.isVipMember) {
+              myAccount.add({
+                'icon': Feather.credit_card,
+                'title': 'أشتراك معنى',
+                'function': () => showPayment(),
+              });
+            } else {
+              userData =
+                  " أنت مشرتك بمنصة معنى الثقافية\n(${userProfile.user.memberships.first.plan.name})";
+            }
+
+            setState(() {
+              isLoading = false;
+            });
+          }).catchError((onError) {
+            debugPrint(onError.toString());
+            setState(() {
+              isLoading = false;
+            });
+          });
+        }
+      } else {
+        setState(() {
+          showLogin = false;
+          isLoading = false;
+        });
+      }
+    });
+    if (!showLogin) {
+      setState(() {
+        showLogin = false;
+        isLoading = false;
+      });
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     istablet = Helper.isTablet(context);
-    // Remove Dark Switch if Device has Dark mode enabled
     if (MediaQuery.of(context).platformBrightness == Brightness.dark) {
       items.removeWhere((item) => item['title'] == 'الوضع المظلم');
     }
@@ -215,120 +254,133 @@ class _ProfileState extends State<Profile> with AutomaticKeepAliveClientMixin {
                     )),
               )
             : SingleChildScrollView(
-                child: Column(children: [
-                showLogin
-                    ? ListView.separated(
-                        padding: EdgeInsets.symmetric(horizontal: 10),
-                        shrinkWrap: true,
-                        physics: NeverScrollableScrollPhysics(),
-                        itemCount: myAccount.length,
-                        itemBuilder: (BuildContext context, int index) {
-                          return GestureDetector(
-                              onTap: myAccount[index]['function'],
-                              child: Padding(
-                                  padding: EdgeInsets.all(8),
-                                  child: Row(
-                                    mainAxisAlignment: MainAxisAlignment.end,
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      Padding(
-                                          padding: EdgeInsets.only(
-                                              right: 10, left: 8),
-                                          child: Text(
-                                            myAccount[index]['title'],
-                                            textAlign: TextAlign.end,
-                                            style: TextStyle(
-                                                fontSize: istablet ? 27 : 18),
-                                          )),
-                                      Icon(
-                                        myAccount[index]['icon'],
-                                        size: istablet ? 38 : 28,
-                                      ),
-                                    ],
-                                  )));
-                        },
-                        separatorBuilder: (BuildContext context, int index) {
-                          return Divider();
-                        },
-                      )
-                    : ListView.separated(
-                        padding: EdgeInsets.symmetric(horizontal: 10),
-                        shrinkWrap: true,
-                        physics: NeverScrollableScrollPhysics(),
-                        itemCount: mainItems.length,
-                        itemBuilder: (BuildContext context, int index) {
-                          return GestureDetector(
-                              onTap: mainItems[index]['function'],
-                              child: Padding(
-                                  padding: EdgeInsets.all(8),
-                                  child: Row(
-                                    mainAxisAlignment: MainAxisAlignment.end,
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    mainAxisSize: MainAxisSize.max,
-                                    children: [
-                                      Padding(
-                                          padding: EdgeInsets.only(
-                                              right: 10, left: 8),
-                                          child: Text(
-                                            mainItems[index]['title'],
-                                            textAlign: TextAlign.end,
-                                            style: TextStyle(
-                                                fontSize: istablet ? 27 : 18),
-                                          )),
-                                      Icon(
-                                        mainItems[index]['icon'],
-                                        size: istablet ? 38 : 28,
-                                      ),
-                                    ],
-                                  )));
-                        },
-                        separatorBuilder: (BuildContext context, int index) {
-                          return Divider();
-                        },
-                      ),
-                ListView.separated(
-                  padding: EdgeInsets.symmetric(horizontal: 10),
-                  shrinkWrap: true,
-                  physics: NeverScrollableScrollPhysics(),
-                  itemCount: items.length,
-                  itemBuilder: (BuildContext context, int index) {
-                    if (items[index]['title'] == 'الوضع المظلم') {
-                      return _buildThemeSwitch(items[index]);
-                    }
+                child: Column(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                    showLogin
+                        ? ListView.separated(
+                            padding: EdgeInsets.symmetric(horizontal: 10),
+                            shrinkWrap: true,
+                            physics: NeverScrollableScrollPhysics(),
+                            itemCount: myAccount.length,
+                            itemBuilder: (BuildContext context, int index) {
+                              return GestureDetector(
+                                  onTap: myAccount[index]['function'],
+                                  child: Padding(
+                                      padding: EdgeInsets.all(8),
+                                      child: Container(
+                                          width:
+                                              MediaQuery.of(context).size.width,
+                                          child: Row(
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.end,
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              Padding(
+                                                  padding: EdgeInsets.only(
+                                                      right: 10, left: 8),
+                                                  child: Text(
+                                                    myAccount[index]['title'],
+                                                    textAlign: TextAlign.end,
+                                                    style: TextStyle(
+                                                        fontSize:
+                                                            istablet ? 27 : 18),
+                                                  )),
+                                              Icon(
+                                                myAccount[index]['icon'],
+                                                size: istablet ? 38 : 28,
+                                              ),
+                                            ],
+                                          ))));
+                            },
+                            separatorBuilder:
+                                (BuildContext context, int index) {
+                              return Divider();
+                            },
+                          )
+                        : Directionality(
+                            textDirection: TextDirection.rtl,
+                            child: ListView.separated(
+                              shrinkWrap: true,
+                              padding: EdgeInsets.symmetric(horizontal: 10),
+                              physics: NeverScrollableScrollPhysics(),
+                              itemCount: mainItems.length,
+                              itemBuilder: (BuildContext context, int index) {
+                                return Padding(
+                                    padding: EdgeInsets.all(8),
+                                    child: GestureDetector(
+                                        onTap: mainItems[index]['function'],
+                                        child: Container(
+                                          width:
+                                              MediaQuery.of(context).size.width,
+                                          child: Row(
+                                            children: [
+                                              Icon(
+                                                mainItems[index]['icon'],
+                                                size: istablet ? 38 : 28,
+                                              ),
+                                              Padding(
+                                                  padding: EdgeInsets.only(
+                                                      right: 10, left: 8),
+                                                  child: Text(
+                                                    mainItems[index]['title'],
+                                                    textAlign: TextAlign.end,
+                                                    style: TextStyle(
+                                                        fontSize:
+                                                            istablet ? 27 : 18),
+                                                  )),
+                                            ],
+                                          ),
+                                        )));
+                              },
+                              separatorBuilder:
+                                  (BuildContext context, int index) {
+                                return Divider();
+                              },
+                            )),
+                    ListView.separated(
+                      padding: EdgeInsets.symmetric(horizontal: 10),
+                      shrinkWrap: true,
+                      physics: NeverScrollableScrollPhysics(),
+                      itemCount: items.length,
+                      itemBuilder: (BuildContext context, int index) {
+                        if (items[index]['title'] == 'الوضع المظلم') {
+                          return _buildThemeSwitch(items[index]);
+                        }
 
-                    return GestureDetector(
-                        onTap: items[index]['function'],
-                        child: Padding(
-                            padding: EdgeInsets.all(8),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.end,
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Padding(
-                                    padding:
-                                        EdgeInsets.only(right: 10, left: 8),
-                                    child: Text(
-                                      items[index]['title'],
-                                      textAlign: TextAlign.end,
-                                      style: TextStyle(
-                                          fontSize: istablet ? 27 : 18),
-                                    )),
-                                Icon(
-                                  items[index]['icon'],
-                                  size: istablet ? 38 : 28,
-                                ),
-                              ],
-                            )));
-                  },
-                  separatorBuilder: (BuildContext context, int index) {
-                    return Divider();
-                  },
-                )
-              ])));
+                        return GestureDetector(
+                            onTap: items[index]['function'],
+                            child: Padding(
+                                padding: EdgeInsets.all(8),
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.end,
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Padding(
+                                        padding:
+                                            EdgeInsets.only(right: 10, left: 8),
+                                        child: Text(
+                                          items[index]['title'],
+                                          textAlign: TextAlign.end,
+                                          style: TextStyle(
+                                              fontSize: istablet ? 27 : 18),
+                                        )),
+                                    Icon(
+                                      items[index]['icon'],
+                                      size: istablet ? 38 : 28,
+                                    ),
+                                  ],
+                                )));
+                      },
+                      separatorBuilder: (BuildContext context, int index) {
+                        return Divider();
+                      },
+                    )
+                  ])));
   }
 
   Widget _buildThemeSwitch(Map item) {
@@ -336,7 +388,7 @@ class _ProfileState extends State<Profile> with AutomaticKeepAliveClientMixin {
         padding: EdgeInsets.all(8),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          crossAxisAlignment: CrossAxisAlignment.end,
+          crossAxisAlignment: CrossAxisAlignment.center,
           mainAxisSize: MainAxisSize.max,
           children: [
             Switch(
@@ -381,8 +433,45 @@ class _ProfileState extends State<Profile> with AutomaticKeepAliveClientMixin {
     MyRouter.pushPageDialog(context, page);
   }
 
+  final Set<Factory> gestureRecognizers = [
+    Factory(() => EagerGestureRecognizer()),
+  ].toSet();
   showPayment() {
-    Helper.showBottomSheet(context, Creditcard(), false, null);
+    Helper.showBottomSheet(
+        context,
+        WebView(
+          gestureRecognizers: gestureRecognizers,
+          initialUrl: 'https://newmana.staging-dev.com/shop',
+          javascriptMode: JavascriptMode.unrestricted,
+          onWebViewCreated: (WebViewController webViewController) {},
+          javascriptChannels: <JavascriptChannel>[
+            _toasterJavascriptChannel(context),
+          ].toSet(),
+          navigationDelegate: (NavigationRequest request) {
+            print('allowing navigation to $request');
+            return NavigationDecision.navigate;
+          },
+          onPageStarted: (String url) {
+            print('Page started loading: $url');
+          },
+          onPageFinished: (String url) {
+            print('Page finished loading: $url');
+          },
+          gestureNavigationEnabled: false,
+        ),
+        false,
+        null);
+  }
+
+  JavascriptChannel _toasterJavascriptChannel(BuildContext context) {
+    return JavascriptChannel(
+        name: 'Toaster',
+        onMessageReceived: (JavascriptMessage message) {
+          // ignore: deprecated_member_use
+          Scaffold.of(context).showSnackBar(
+            SnackBar(content: Text(message.message)),
+          );
+        });
   }
 
   showloginSheet() {

@@ -20,15 +20,21 @@ class Book {
   String title;
   String content;
   String imageUrl;
+  String website_url;
   String pdfUrl;
   List<Tags> tags;
 
   Book({this.title, this.content, this.imageUrl, this.pdfUrl, this.tags});
 
   Book.fromJson(Map<String, dynamic> json) {
-    title = json['title'];
+    title = json['title']
+        .toString()
+        .replaceAll(r'&nbsp;', '')
+        .replaceAll(r'&hellip;', '')
+        .replaceAll('&#8211;', '-');
     content = json['content'];
     imageUrl = json['image_url'];
+    website_url = json['website_url'];
     pdfUrl = json['pdf_url'];
     if (json['tags'] != null) {
       tags = new List<Tags>();
