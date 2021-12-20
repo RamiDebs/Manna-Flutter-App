@@ -36,7 +36,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
         child: SingleChildScrollView(
           child: Form(
               key: _formKey,
-              autovalidate: _autoValidate,
+              autovalidateMode: _autoValidate? AutovalidateMode.always:AutovalidateMode.disabled,
               child: Column(
                 children: <Widget>[_buildEmailSignUpForm()],
               )),
@@ -115,9 +115,9 @@ class _SignUpScreenState extends State<SignUpScreen> {
               style: new TextStyle(
                   fontSize: kFontSize, color: Colors.blueGrey),
               controller: _phoneTextController,
-              inputFormatters: [
-                new BlacklistingTextInputFormatter(new RegExp('[\\.|\\,|\\-]')),
-              ],
+              // inputFormatters: [
+              //   new BlacklistingTextInputFormatter(new RegExp('[\\.|\\,|\\-]')),
+              // ],
               keyboardType: TextInputType.number,
               validator: (value) {
                 if (value.length == 0) {

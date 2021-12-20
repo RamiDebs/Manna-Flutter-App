@@ -24,8 +24,10 @@ class ThemeConfig {
     bottomAppBarColor: lightBottom,
     scaffoldBackgroundColor: lightBG,
     selectedRowColor: selectedIconLight,
+
     appBarTheme: AppBarTheme(
       elevation: 5.0,
+      backgroundColor: lightAccent,
     ),
   );
 
@@ -40,6 +42,8 @@ class ThemeConfig {
     selectedRowColor: selectedIcon,
     appBarTheme: AppBarTheme(
       elevation: 5.0,
+            backgroundColor: lightAccent,
+
     ),
   );
 }

@@ -13,9 +13,8 @@ import 'package:maana_main_project_2/models/WordpressResponse.dart';
 
 class Api {
   Dio dio = Dio();
-  static String baseURL = "https://newmana.staging-dev.com/wp-json";
+  static String baseURL = "https://mana.net/wp-json";
   static String manaFlutter = "$baseURL/mana-flutter/v2";
-
   static String articles = "$manaFlutter/articles";
   static String explore = "$manaFlutter/explore";
   static String feed = "$manaFlutter/feed";

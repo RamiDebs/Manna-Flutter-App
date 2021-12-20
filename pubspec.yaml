@@ -29,7 +29,6 @@ dependencies:
   advance_pdf_viewer: any
   lottie: ^0.7.0+1
   rounded_loading_button: any
-  native_pdf_renderer: ^2.4.0
   email_validator: '^1.0.5'
   webview_flutter: ^1.0.7
   share: ^0.6.5+4
